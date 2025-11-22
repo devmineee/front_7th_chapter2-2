@@ -16,34 +16,55 @@ function updateAttributes(target, newProps, oldProps) {
       return;
     }
 
-    const newValue = newProps ? newProps[key] : undefined;
-    const oldValue = oldProps ? oldProps[key] : undefined;
+    const hasNewValue = newProps && key in newProps;
+    const hasOldValue = oldProps && key in oldProps;
+    const newValue = hasNewValue ? newProps[key] : undefined;
+    const oldValue = hasOldValue ? oldProps[key] : undefined;
 
-    if (newValue === oldValue) {
+    if (!hasNewValue && !hasOldValue) {
       return;
     }
 
-    if (newValue === undefined || newValue === null) {
-      if (key === "className") {
-        target.removeAttribute("class");
-      } else {
-        target.removeAttribute(key);
+    if (hasNewValue && hasOldValue && newValue === oldValue) {
+      return;
+    }
+
+    if (!hasNewValue || newValue === null || newValue === undefined) {
+      if (hasOldValue) {
+        if (key === "className") {
+          if ("className" in target) {
+            target.className = "";
+          }
+          target.removeAttribute("class");
+        } else {
+          if (key in target) {
+            target[key] = "";
+          }
+          target.removeAttribute(key);
+        }
       }
-      if (key in target) {
-        target[key] = "";
-      }
-    } else {
+      return;
+    }
+
+    if (hasNewValue) {
       if (key === "className") {
         target.setAttribute("class", newValue);
+        if ("className" in target) {
+          target.className = newValue;
+        }
       } else if (key.startsWith("data-")) {
         target.setAttribute(key, newValue);
       } else if (typeof newValue === "boolean") {
-        if (newValue) {
-          target.setAttribute(key, "");
-          target[key] = true;
+        if (key === "checked" || key === "selected") {
+          target[key] = newValue;
         } else {
-          target.removeAttribute(key);
-          target[key] = false;
+          if (newValue) {
+            target.setAttribute(key, "");
+            target[key] = true;
+          } else {
+            target.removeAttribute(key);
+            target[key] = false;
+          }
         }
       } else {
         target.setAttribute(key, newValue);
@@ -144,6 +165,10 @@ export function updateElement(parentElement, newNode, oldNode, index = 0) {
 
         for (let i = 0; i < maxLength; i++) {
           updateElement(currentElement, newChildren[i], oldChildren[i], i);
+        }
+
+        while (currentElement.childNodes.length > newChildren.length) {
+          currentElement.removeChild(currentElement.lastChild);
         }
       }
     }

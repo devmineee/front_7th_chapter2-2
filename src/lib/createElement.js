@@ -84,12 +84,16 @@ function updateAttributes($el, props) {
     }
 
     if (typeof props[key] === "boolean") {
-      if (props[key]) {
-        $el.setAttribute(key, "");
-        $el[key] = true;
+      if (key === "checked" || key === "selected") {
+        $el[key] = props[key];
       } else {
-        $el.removeAttribute(key);
-        $el[key] = false;
+        if (props[key]) {
+          $el.setAttribute(key, "");
+          $el[key] = true;
+        } else {
+          $el.removeAttribute(key);
+          $el[key] = false;
+        }
       }
       return;
     }
