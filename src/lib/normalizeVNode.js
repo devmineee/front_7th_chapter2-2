@@ -1,18 +1,20 @@
-export function normalizeVNode(vNode) {
-  if (vNode === null) return "";
+const isFalsy = (value) =>
+  value === "" ||
+  value === null ||
+  value === undefined ||
+  value === false ||
+  value === true;
 
-  switch (typeof vNode) {
-    case "undefined":
-      return "";
-    case "boolean":
-      return "";
-    case "string":
-      return vNode.toString();
-    case "number":
-      return vNode.toString();
+export function normalizeVNode(vNode) {
+  if (vNode === null || vNode === undefined || typeof vNode === "boolean") {
+    return "";
   }
 
-  if (vNode && typeof vNode === "object" && vNode.type) {
+  if (typeof vNode === "string" || typeof vNode === "number") {
+    return vNode.toString();
+  }
+
+  if (vNode.type) {
     if (typeof vNode.type === "function") {
       const props = vNode.props || {};
       const result = vNode.type({ children: vNode.children, ...props });
@@ -21,19 +23,8 @@ export function normalizeVNode(vNode) {
 
     const children = vNode.children || [];
     const normalizedChildren = children
-      .map((child) => normalizeVNode(child))
-      .filter((child) => {
-        if (
-          child === "" ||
-          child === null ||
-          child === undefined ||
-          child === false ||
-          child === true
-        ) {
-          return false;
-        }
-        return true;
-      });
+      .map(normalizeVNode)
+      .filter((child) => !isFalsy(child));
 
     return {
       type: vNode.type,
