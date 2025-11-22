@@ -1,15 +1,11 @@
 export function normalizeVNode(vNode) {
-  console.log("normalizeVNode called with:", vNode);
   if (vNode === null) return "";
 
   switch (typeof vNode) {
-    // 빈 문자열을 반환하는 케이스
     case "undefined":
       return "";
     case "boolean":
       return "";
-
-    // 문자열로 변환하여 반환하는 케이스
     case "string":
       return vNode.toString();
     case "number":
@@ -18,18 +14,33 @@ export function normalizeVNode(vNode) {
 
   if (vNode && typeof vNode === "object" && vNode.type) {
     if (typeof vNode.type === "function") {
-      const result = vNode.type({ children: vNode.children, ...vNode.props });
+      const props = vNode.props || {};
+      const result = vNode.type({ children: vNode.children, ...props });
       return normalizeVNode(result);
     }
+
+    const children = vNode.children || [];
+    const normalizedChildren = children
+      .map((child) => normalizeVNode(child))
+      .filter((child) => {
+        if (
+          child === "" ||
+          child === null ||
+          child === undefined ||
+          child === false ||
+          child === true
+        ) {
+          return false;
+        }
+        return true;
+      });
+
+    return {
+      type: vNode.type,
+      props: vNode.props,
+      children: normalizedChildren,
+    };
   }
 
-  const normalizedChildren = vNode.children
-    .map((child) => normalizeVNode(child))
-    .filter((child) => child);
-
-  return {
-    type: vNode.type,
-    props: vNode.props,
-    children: normalizedChildren,
-  };
+  return "";
 }
